@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>ATS Resume Analyzer</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+
+<body>
+    <div class="container">
+
+        <h2>ATS Resume Analyzer</h2>
+
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="file" name="resume" accept="application/pdf" required>
+            <br><br>
+
+            <textarea name="job_description" rows="6"
+                placeholder="Optional: Paste Job Description here (not compulsory)"></textarea>
+
+            <br><br>
+            <button type="submit">Analyze Resume</button>
+        </form>
+
+        {% if structure %}
+        <hr>
+
+        <h3>ATS Structure Check</h3>
+        <ul>
+            <li>Skills section: {{ structure.has_skills|yesno:"Detected,Missing" }}</li>
+            <li>Experience section: {{ structure.has_experience|yesno:"Detected,Missing" }}</li>
+            <li>Education section: {{ structure.has_education|yesno:"Detected,Missing" }}</li>
+            <li>Projects section: {{ structure.has_projects|yesno:"Detected,Missing" }}</li>
+            <li>Readable by ATS: {{ structure.is_readable|yesno:"Yes,No" }}</li>
+            <li>Word Count: {{ structure.word_count }}</li>
+        </ul>
+
+        <h3>Final ATS Score</h3>
+
+        {% if ats_score >= 75 %}
+        <div class="success"><strong>{{ ats_score }}/100</strong> — ATS Optimized</div>
+        {% elif ats_score >= 50 %}
+        <div class="warning"><strong>{{ ats_score }}/100</strong> — Needs Improvements</div>
+        {% else %}
+        <div class="danger"><strong>{{ ats_score }}/100</strong> — Not ATS Friendly</div>
+        {% endif %}
+
+        {% if improvements %}
+        <h3>Resume Improvement Suggestions</h3>
+        <ul>
+            {% for tip in improvements %}
+            <li>{{ tip }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        {% if jd_score != None %}
+        <h3>Job Description Match</h3>
+        <p><strong>{{ jd_score }}%</strong> match</p>
+
+        {% if missing_keywords %}
+        <p><strong>Missing JD Keywords:</strong></p>
+        <p>{{ missing_keywords|join:", " }}</p>
+        {% else %}
+        <p><em>No critical keywords missing 🎯</em></p>
+        {% endif %}
+        {% endif %}
+
+        {% if detected_skills %}
+        <h3>Explicit Skills</h3>
+        <p>{{ detected_skills|join:", " }}</p>
+        {% endif %}
+
+        {% if inferred_skills %}
+        <h3>Inferred Skills (Not ATS Safe)</h3>
+        <p>{{ inferred_skills|join:", " }}</p>
+        {% endif %}
+
+        {% if suggested_roles %}
+        <h3>Recommended Roles</h3>
+        <ul>
+            {% for role in suggested_roles %}
+            <li>{{ role }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        {% if warnings %}
+        <h3>Warnings</h3>
+        <ul>
+            {% for w in warnings %}
+            <li>{{ w }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        {% if text_preview %}
+        <h3>Extracted Text Preview</h3>
+        <pre>{{ text_preview }}</pre>
+        {% endif %}
+
+        {% endif %}
+
+    </div>
+</body>
+
+</html>
