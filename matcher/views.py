@@ -24,32 +24,49 @@ def upload_resume(request):
             context["warnings"] = ["No resume file uploaded."]
             return render(request, "upload.html", context)
 
-        # Save resume
+        # ===== SAVE RESUME =====
         resume = Resume.objects.create(file=resume_file)
 
-        # Extract text
+        # ===== EXTRACT TEXT (ONCE ONLY) =====
         text = extract_text_from_pdf(resume.file.path) or ""
         resume.extracted_text = text
         resume.save()
 
+        # ===== SCANNED RESUME DETECTION =====
         if not text.strip():
-            context["warnings"] = ["Resume text could not be extracted."]
+            context.update({
+                "warnings": [
+                    "⚠️ Scanned resume detected (image-based PDF).",
+                    "ATS systems cannot read images or scanned documents.",
+                    "This resume contains no selectable text.",
+                    "✅ Please upload one of the following formats:",
+                    "• Text-based PDF exported from Word or Google Docs",
+                    "• DOCX (Word document) converted to PDF",
+                ]
+            })
             return render(request, "upload.html", context)
 
         # ===== STRUCTURE ANALYSIS =====
-        structure = analyze_structure(text)
+        structure = analyze_structure(text) or {
+            "has_skills": False,
+            "has_experience": False,
+            "has_education": False,
+            "has_projects": False,
+            "is_readable": False,
+            "word_count": len(text.split())
+        }
 
         explicit_skills = extract_explicit_skills(text)
         inferred_skills = extract_inferred_skills(text, explicit_skills)
         roles = suggest_roles(explicit_skills)
 
-        # IMPORTANT: unpack tuple correctly
+        # ===== ATS SCORE =====
         ats_score, score_breakdown = calculate_ats_score(
             structure,
             skill_count=len(explicit_skills)
         )
 
-        # ===== IMPROVEMENTS =====
+        # ===== IMPROVEMENT SUGGESTIONS =====
         improvements = generate_improvements(
             ats_score=ats_score,
             structure=structure,
@@ -59,9 +76,9 @@ def upload_resume(request):
         # ===== WARNINGS =====
         warnings = []
         if not explicit_skills:
-            warnings.append("No explicit technical skills detected.")
+            warnings.append("No explicit technical skills detected. Add a clear Skills section.")
         if not structure.get("has_experience"):
-            warnings.append("Experience section missing. Add internships or training.")
+            warnings.append("Experience section missing. Add internships, training, or projects.")
 
         # ===== OPTIONAL JD MATCH =====
         jd_score = None

@@ -24,6 +24,18 @@
             <button type="submit">Analyze Resume</button>
         </form>
 
+        {% if warnings %}
+        <h3>Warnings</h3>
+        <div class="warning">
+            <ul>
+                {% for w in warnings %}
+                <li>{{ w }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+
         {% if structure %}
         <hr>
 
