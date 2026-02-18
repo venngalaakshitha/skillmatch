@@ -1,121 +1,347 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-    <title>ATS Resume Analyzer</title>
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillMatch Enterprise ATS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --primary-light: #3b82f6;
+            --success: #10b981;
+            --dark: #1f2937;
+            --card-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            --border-radius: 16px;
+        }
+
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .navbar-custom {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            padding: 0.75rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1030;
+        }
+
+        .navbar-brand-custom {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+
+        .nav-link-custom {
+            color: var(--dark);
+            font-weight: 500;
+            padding: 0.75rem 1.25rem;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            margin: 0 0.25rem;
+            text-decoration: none;
+        }
+
+        .nav-link-custom:hover {
+            background-color: rgba(30, 58, 138, 0.08);
+            color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .btn-nav-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            border: none;
+            border-radius: 12px;
+            padding: 0.625rem 1.5rem;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(30, 58, 138, 0.3);
+            color: white;
+            text-decoration: none;
+        }
+
+        .score-metric {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            border-radius: var(--border-radius);
+            color: white;
+            height: 160px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .score-ring {
+            width: 90px;
+            height: 90px;
+            border: 6px solid rgba(255, 255, 255, 0.2);
+            border-top: 6px solid var(--success);
+            border-radius: 50%;
+            position: absolute;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            transition: transform 0.3s ease;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .nav-btn {
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            font-size: 1.05rem;
+            transition: all 0.3s ease;
+            box-shadow: var(--card-shadow);
+            text-decoration: none;
+            display: block;
+            width: 100%;
+            padding: 1rem 2rem;
+            border: none;
+            text-align: center;
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2);
+        }
+
+        .status-bar {
+            background: linear-gradient(90deg, var(--success), var(--primary-light));
+            height: 8px;
+            border-radius: 4px;
+        }
+
+        .fit-80 {
+            width: 80% !important;
+        }
+
+        .fit-85 {
+            width: 85% !important;
+        }
+
+        .fit-90 {
+            width: 90% !important;
+        }
+
+        .fit-95 {
+            width: 95% !important;
+        }
+
+
+        .file-upload-area {
+            border: 2px dashed #3b82f6;
+            border-radius: 20px;
+            padding: 3rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .file-upload-area:hover {
+            border-color: var(--primary);
+            background-color: rgba(59, 130, 246, 0.05);
+        }
+    </style>
 </head>
 
 <body>
-    <div class="container">
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container">
+            <a class="navbar-brand navbar-brand-custom fw-bold" href="{% url 'upload_resume' %}">
+                <i class="fas fa-brain me-2"></i>SkillMatch ATS
+            </a>
 
-        <h2>ATS Resume Analyzer</h2>
-
-        <form method="POST" enctype="multipart/form-data">
-            {% csrf_token %}
-            <input type="file" name="resume" accept="application/pdf" required>
-            <br><br>
-
-            <textarea name="job_description" rows="6"
-                placeholder="Optional: Paste Job Description here (not compulsory)"></textarea>
-
-            <br><br>
-            <button type="submit">Analyze Resume</button>
-        </form>
-
-        {% if warnings %}
-        <h3>Warnings</h3>
-        <div class="warning">
-            <ul>
-                {% for w in warnings %}
-                <li>{{ w }}</li>
-                {% endfor %}
-            </ul>
+            <div class="navbar-nav ms-auto">
+                {% if user.is_authenticated %}
+                <span class="navbar-text me-3 fs-6 fw-semibold text-primary">
+                    <i class="fas fa-user-circle me-1"></i>{{ user.username }}
+                </span>
+                <a class="nav-link nav-link-custom" href="{% url 'history' %}">
+                    <i class="fas fa-history me-1"></i>History
+                </a>
+                <a class="nav-link nav-link-custom" href="{% url 'logout' %}">
+                    <i class="fas fa-sign-out-alt me-1"></i>Logout
+                </a>
+                {% else %}
+                <a class="nav-link nav-link-custom" href="{% url 'login' %}">
+                    <i class="fas fa-sign-in-alt me-1"></i>Login
+                </a>
+                <a class="nav-link nav-link-custom" href="{% url 'register' %}">
+                    <i class="fas fa-user-plus me-1"></i>Sign Up
+                </a>
+                {% endif %}
+            </div>
         </div>
+    </nav>
+
+
+    <div class="container py-5">
+        <!-- HEADER -->
+        <div class="row justify-content-center mb-5">
+            <div class="col-lg-10">
+                <div class="glass-card p-5 text-center">
+                    <i class="fas fa-rocket fa-3x text-primary mb-4"></i>
+                    <h1 class="display-4 fw-bold mb-3" style="color: #1f2937">Enterprise ATS Analysis</h1>
+                    <p class="lead text-muted mb-0">AI-powered resume scoring and role recommendations</p>
+                </div>
+            </div>
+        </div>
+
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-3 mx-4 shadow-sm mb-4">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
         {% endif %}
 
+        {% if not resume %}
+        <!-- UPLOAD FORM -->
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="glass-card p-5">
+                    <div class="text-center mb-5">
+                        <i class="fas fa-cloud-upload-alt fa-4x text-primary mb-4"></i>
+                        <h2 class="fw-bold mb-3" style="color: #1f2937">Upload Your Resume</h2>
+                        <p class="text-muted lead">Get instant ATS compatibility score</p>
+                    </div>
 
-        {% if structure %}
-        <hr>
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-5">
+                            <label class="form-label fw-bold fs-4 mb-4">Resume File <span
+                                    class="text-danger">*</span></label>
+                            <label for="resume" class="file-upload-area">
+                                <input type="file" name="resume" accept=".pdf,.docx" required>
+                                <i class="fas fa-file-pdf fa-3x text-primary mb-3"></i>
+                                <p class="mb-2 fw-semibold fs-5">Click to upload</p>
+                                <small class="text-muted">PDF or DOCX (Max 5MB)</small>
+                            </label>
+                        </div>
 
-        <h3>ATS Structure Check</h3>
-        <ul>
-            <li>Skills section: {{ structure.has_skills|yesno:"Detected,Missing" }}</li>
-            <li>Experience section: {{ structure.has_experience|yesno:"Detected,Missing" }}</li>
-            <li>Education section: {{ structure.has_education|yesno:"Detected,Missing" }}</li>
-            <li>Projects section: {{ structure.has_projects|yesno:"Detected,Missing" }}</li>
-            <li>Readable by ATS: {{ structure.is_readable|yesno:"Yes,No" }}</li>
-            <li>Word Count: {{ structure.word_count }}</li>
-        </ul>
+                        <div class="mb-4">
+                            <label class="form-label fw-bold fs-5 mb-3">Job Description (Optional)</label>
+                            <textarea class="form-control p-4" id="job_description" name="job_description" rows="4"
+                                placeholder="Paste job description for better matching..."></textarea>
+                        </div>
 
-        <h3>Final ATS Score</h3>
+                        <button type="submit" class="btn btn-primary btn-lg w-100 py-4 fw-bold fs-5 shadow-lg"
+                            style="background: linear-gradient(135deg, #1e3a8a, #3b82f6); border: none;">
+                            <i class="fas fa-bolt me-3"></i>Run ATS Analysis
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
 
-        {% if ats_score >= 75 %}
-        <div class="success"><strong>{{ ats_score }}/100</strong> — ATS Optimized</div>
-        {% elif ats_score >= 50 %}
-        <div class="warning"><strong>{{ ats_score }}/100</strong> — Needs Improvements</div>
         {% else %}
-        <div class="danger"><strong>{{ ats_score }}/100</strong> — Not ATS Friendly</div>
-        {% endif %}
+        <!-- RESULTS DASHBOARD -->
+        <div class="row g-4 mb-5">
+            <div class="col-lg-3 col-md-6">
+                <div class="score-metric h-100 text-center">
+                    <div class="score-ring"></div>
+                    <div style="position: relative; z-index: 2;">
+                        <div class="fs-1 fw-bold mb-2">{{ resume.ats_score }}%</div>
+                        <div
+                            style="background: rgba(255,255,255,0.2); border-radius: 20px; padding: 8px 20px; font-weight: 600;">
+                            ATS Score
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-        {% if improvements %}
-        <h3>Resume Improvement Suggestions</h3>
-        <ul>
-            {% for tip in improvements %}
-            <li>{{ tip }}</li>
-            {% endfor %}
-        </ul>
-        {% endif %}
+            <div class="col-lg-3 col-md-6">
+                <div class="glass-card h-100 p-4 text-center">
+                    <i class="fas fa-code fa-2x text-primary mb-3"></i>
+                    <div class="fs-2 fw-bold text-primary">{{ detected_skills|length }}</div>
+                    <div class="text-muted fw-semibold mb-3">Skills Found</div>
+                    {% for skill in detected_skills|slice:":3" %}
+                    <span class="badge bg-primary-subtle px-3 py-2 me-1">{{ skill }}</span>
+                    {% endfor %}
+                </div>
+            </div>
 
-        {% if jd_score != None %}
-        <h3>Job Description Match</h3>
-        <p><strong>{{ jd_score }}%</strong> match</p>
+            <div class="col-lg-3 col-md-6">
+                <div class="glass-card h-100 p-4">
+                    <h6 class="fw-bold mb-4" style="color: #1f2937;">Best Role Match</h6>
+                    {% if suggested_roles %}
+                    <h5 class="fw-bold mb-3" style="color: #1f2937;">{{ suggested_roles.0.role }}</h5>
+                    <div class="status-bar mb-3 fit-{{ suggested_roles.0.fit_score }}"></div>
+                    <small class="text-success fw-bold">{{ suggested_roles.0.fit_score }}% fit</small>
+                    {% endif %}
+                </div>
+            </div>
 
-        {% if missing_keywords %}
-        <p><strong>Missing JD Keywords:</strong></p>
-        <p>{{ missing_keywords|join:", " }}</p>
-        {% else %}
-        <p><em>No critical keywords missing 🎯</em></p>
-        {% endif %}
-        {% endif %}
+            <div class="col-lg-3 col-md-6">
+                <div class="glass-card h-100 p-4 text-center">
+                    <h6 class="fw-bold mb-4" style="color: #1f2937;">Analysis #{{ resume.id }}</h6>
+                    <p class="text-muted mb-4">{{ resume.uploaded_at|date:"MMM d, Y" }}</p>
+                    <a href="{% url 'download_resume_report' resume.id %}" class="btn btn-outline-primary w-100">
+                        <i class="fas fa-download me-2"></i>Download
+                    </a>
+                </div>
+            </div>
+        </div>
 
-        {% if detected_skills %}
-        <h3>Explicit Skills</h3>
-        <p>{{ detected_skills|join:", " }}</p>
-        {% endif %}
+        <!-- ACTION BUTTONS -->
+        <div class="row g-4">
+            <div class="col-lg-4 col-md-6">
+                <a href="{% url 'download_resume_report' resume.id %}" class="nav-btn btn btn-success text-white">
+                    <i class="fas fa-file-pdf me-3"></i>Download Report
+                </a>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <a href="{% url 'history' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-history me-1"></i> View History
+                </a>
 
-        {% if inferred_skills %}
-        <h3>Inferred Skills (Not ATS Safe)</h3>
-        <p>{{ inferred_skills|join:", " }}</p>
-        {% endif %}
-
-        {% if suggested_roles %}
-        <h3>Recommended Roles</h3>
-        <ul>
-            {% for role in suggested_roles %}
-            <li>{{ role }}</li>
-            {% endfor %}
-        </ul>
-        {% endif %}
-
-        {% if warnings %}
-        <h3>Warnings</h3>
-        <ul>
-            {% for w in warnings %}
-            <li>{{ w }}</li>
-            {% endfor %}
-        </ul>
-        {% endif %}
-
-        {% if text_preview %}
-        <h3>Extracted Text Preview</h3>
-        <pre>{{ text_preview }}</pre>
-        {% endif %}
+            </div>
+            <div class="col-lg-4">
+                <a href="{% url 'upload_resume' %}" class="nav-btn btn btn-outline-primary">
+                    <i class="fas fa-plus me-3"></i>New Analysis
+                </a>
+            </div>
+        </div>
 
         {% endif %}
-
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>
