@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-p+mf8u719i(=@+q^cfw68&760y83v%o!g*4cq%dvel4g1r&4xy
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -127,6 +127,9 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+# matcher/__init__.py
+default_app_config = 'matcher.apps.MatcherConfig'
+
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -134,3 +137,6 @@ MEDIA_ROOT = BASE_DIR / 'media'
 LOGIN_URL = "/login/"
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/login/"
+
+
+ 

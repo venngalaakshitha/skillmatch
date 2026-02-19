@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Sign Up | SkillMatch</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+
+    <div class="container">
+        <div class="row justify-content-center align-items-center vh-100">
+            <div class="col-md-4">
+
+                <div class="card shadow-lg border-0">
+                    <div class="card-body p-4">
+
+                        <h3 class="text-center mb-4 fw-bold">Create Account</h3>
+
+                        <form method="POST">
+                            {% csrf_token %}
+
+                            <div class="mb-3">
+                                <label class="form-label">Username</label>
+                                <input type="text" name="username" class="form-control form-control-lg" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Password</label>
+                                <input type="password" name="password1" class="form-control form-control-lg" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Confirm Password</label>
+                                <input type="password" name="password2" class="form-control form-control-lg" required>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-lg w-100 mt-2">
+                                Sign Up
+                            </button>
+
+                            <!-- Back to Login -->
+                            <div class="text-center mt-3">
+                                <small class="text-muted">
+                                    Already have an account?
+                                </small><br>
+                                <a href="/login/" class="text-decoration-none">
+                                    Login here
+                                </a>
+                            </div>
+
+                        </form>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>
