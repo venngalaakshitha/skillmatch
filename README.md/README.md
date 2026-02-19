@@ -37,7 +37,7 @@ python manage.py createsuperuser
 python manage.py runserver
 Open:
 
-http://127.0.0.1:8000/login/
+ http://127.0.0.1:8000/login/
 🔐 Demo Credentials
 Username: admin
 Password: admin123
