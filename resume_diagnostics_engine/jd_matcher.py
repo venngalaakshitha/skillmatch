@@ -1,15 +1,16 @@
 import re
 
-def calculate_jd_match(resume_text, jd_text):
-    resume_words = set(re.findall(r"[a-zA-Z]+", resume_text.lower()))
-    jd_words = set(re.findall(r"[a-zA-Z]+", jd_text.lower()))
+def calculate_jd_match(resume_text: str, jd_text: str) -> tuple[float, list[str]]:
+    # LOGIC: Clean and convert to Sets for O(1) lookup
+    resume_words = set(resume_text.lower().split())
+    jd_keywords = set(jd_text.lower().split())
 
-    common = resume_words.intersection(jd_words)
+    # LOGIC: The "Transparent Overlay" (Intersection)
+    matched_skills = jd_keywords & resume_words  # Matches
+    missing_skills = jd_keywords - resume_words  # Missing
 
-    if not jd_words:
-        return 0, []
+    if not jd_keywords:
+        return 0.0, []
 
-    score = int((len(common) / len(jd_words)) * 100)
-    missing = sorted(jd_words - resume_words)
-
-    return score, missing[:15]
+    score = round((len(matched_skills) / len(jd_keywords)) * 100, 2)
+    return score, list(missing_skills)
