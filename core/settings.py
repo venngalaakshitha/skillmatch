@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'jd_matcher',
     'accounts',
     'users',
+    'templates',
 ]
 
 MIDDLEWARE = [

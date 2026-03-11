@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Resume Analysis - SkillMatch</title>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+
+    <div class="container mt-5">
+
+        <h2 class="text-center mb-4">Resume Analysis Result</h2>
+
+
+        <!-- ATS SCORE -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+
+                <h5>ATS Score</h5>
+
+                <div class="progress mb-2">
+
+                    {% if score >= 80 %}
+                    <div class="progress-bar bg-success" style="width: 80%">
+                        {{ score }}%
+                    </div>
+
+                    {% elif score >= 60 %}
+                    <div class="progress-bar bg-warning" style="width: 60%">
+                        {{ score }}%
+                    </div>
+
+                    {% else %}
+                    <div class="progress-bar bg-danger" style="width: 40%">
+                        {{ score }}%
+                    </div>
+                    {% endif %}
+
+                </div>
+
+            </div>
+        </div>
+
+
+        <!-- SCORE BREAKDOWN -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+
+                <h5>Score Breakdown</h5>
+
+                <ul class="list-group">
+
+                    {% for key, value in breakdown.items %}
+
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>{{ key }}</span>
+                        <strong>{{ value }}</strong>
+                    </li>
+
+                    {% empty %}
+
+                    <li class="list-group-item text-muted">
+                        No breakdown data available
+                    </li>
+
+                    {% endfor %}
+
+                </ul>
+
+            </div>
+        </div>
+
+
+        <!-- KEYWORD MATCH -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+
+                <h5>Keyword Match</h5>
+
+                <p class="fw-bold text-primary">
+                    {{ keyword_score }}%
+                </p>
+
+            </div>
+        </div>
+
+
+        <!-- MATCHED KEYWORDS -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+
+                <h5>Matched Keywords</h5>
+
+                <ul class="list-group">
+
+                    {% for word in matched_keywords %}
+
+                    <li class="list-group-item">
+                        {{ word }}
+                    </li>
+
+                    {% empty %}
+
+                    <li class="list-group-item text-muted">
+                        No matched keywords found
+                    </li>
+
+                    {% endfor %}
+
+                </ul>
+
+            </div>
+        </div>
+
+
+        <!-- MISSING SKILLS -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+
+                <h5>Missing Skills</h5>
+
+                <ul class="list-group">
+
+                    {% for skill in missing_skills %}
+
+                    <li class="list-group-item text-danger">
+                        {{ skill }}
+                    </li>
+
+                    {% empty %}
+
+                    <li class="list-group-item text-success">
+                        No missing skills detected
+                    </li>
+
+                    {% endfor %}
+
+                </ul>
+
+            </div>
+        </div>
+
+
+        <!-- SUGGESTIONS -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+
+                <h5>Resume Improvement Suggestions</h5>
+
+                <ul class="list-group">
+
+                    {% for s in suggestions %}
+
+                    <li class="list-group-item">
+                        {{ s }}
+                    </li>
+
+                    {% empty %}
+
+                    <li class="list-group-item text-muted">
+                        No suggestions available
+                    </li>
+
+                    {% endfor %}
+
+                </ul>
+
+            </div>
+        </div>
+
+
+        <!-- RESUME TEXT -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+
+                <h5>Resume Extracted Text</h5>
+
+                <p class="text-muted">
+                    {{ resume.extracted_text|truncatewords:80 }}
+                </p>
+
+            </div>
+        </div>
+
+
+        <!-- BUTTONS -->
+        <div class="text-center mb-5">
+
+            <a href="{% url 'history' %}" class="btn btn-secondary">
+                Back to History
+            </a>
+
+            <a href="{% url 'upload_resume' %}" class="btn btn-primary">
+                Analyze Another Resume
+            </a>
+
+        </div>
+
+
+    </div>
+
+</body>
+
+</html>
