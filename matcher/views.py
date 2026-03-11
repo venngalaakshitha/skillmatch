@@ -1,51 +1,68 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import Resume
-# Import the 'Brain' from your Service Layer
+
+# 1. ARCHITECTURE: The Clean Connection
+# We import only what the view needs to "Delegate" the work.
 from .services import (
-    extract_text_from_resume, 
-    realistic_ats_score, 
-    extract_skills, 
-    suggest_role
+    extract_text_from_pdf,   # Matches your services.py
+    realistic_ats_score,     # Matches your services.py
 )
 
 @login_required
 def upload_resume(request):
     """
     LOGIC: The Controller.
-    IMAGINATION: Receives the file, hands it to the Service 'Factory', 
-    and shows the result.
+    IMAGINATION: A traffic cop directing data to the Service 'Factory'.
     """
     if request.method == "POST":
         resume_file = request.FILES.get("resume")
         jd_text = request.POST.get("job_description", "")
 
         if not resume_file:
-            messages.error(request, "Please upload a file.")
+            messages.error(request, "❌ Please upload a valid file.")
             return render(request, 'upload.html')
 
-        # 1. PERSISTENCE: Save the file first
+        # 1. PERSISTENCE: Save the record first
+        # Pro Tip: Saving first ensures we have a record to attach errors to if needed.
         resume_obj = Resume.objects.create(
             user=request.user,
             file=resume_file,
             job_description=jd_text
         )
 
-        # 2. SERVICE CALL: Extract and Analyze (The Architecture Connection)
-        # We call the functions from services.py here
-        text = extract_text_from_resume(resume_obj.file.path)
-        skills = extract_skills(text)
-        score, breakdown = realistic_ats_score(text, jd_text, skills)
-        role = suggest_role(skills)
+        # 2. SERVICE CALL: Extraction (The Architecture Connection)
+        # Logic: We use the Pydantic-validated service from services.py
+        text = extract_text_from_pdf(resume_obj.file.path)
+        
+        # 3. DEFENSIVE PROGRAMMING: Validation Check
+        if not text or len(text) < 50: # Standard resume usually > 50 chars
+            resume_obj.delete() # Cleanup: Don't store "garbage" data
+            messages.error(request, "❌ Analysis Failed: The PDF is unreadable, empty, or scanned.")
+            return render(request, 'upload.html')
 
-        # 3. UPDATE DB: Save the results
+        # 4. ANALYTICS: Scoring (The O(1) Engine)
+        # Logic: Hand off the clean text to our multi-factor scoring engine
+        score, breakdown = realistic_ats_score(text, jd_text)
+
+        # 5. DATA PERSISTENCE: Update the record
         resume_obj.extracted_text = text
         resume_obj.ats_score = score
-        resume_obj.suggested_role = role
+        # Note: 'breakdown' can be stored in a JSONField or used in the template
         resume_obj.save()
 
-        messages.success(request, "Analysis Complete!")
-        return redirect('results', pk=resume_obj.pk)
+        messages.success(request, f"✅ Analysis Complete! ATS Score: {score}%")
+        
+        # Redirect to a detail/result page (assuming you have a 'results' URL)
+        return render(request, 'results.html', {
+            'resume': resume_obj, 
+            'breakdown': breakdown
+        })
 
     return render(request, 'upload.html')
+
+def resume_results(request, pk):
+    """Simple view to display the stored analysis."""
+    resume = get_object_or_404(Resume, pk=pk, user=request.user)
+    return render(request, 'results.html', {'resume': resume})
