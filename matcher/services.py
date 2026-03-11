@@ -1,139 +1,231 @@
 import re
 import PyPDF2
 import logging
-from typing import Set, Optional
+from typing import Optional, Set
 from pydantic import BaseModel, Field, ValidationError
-from .models import Resume
 
-# 1. LOGIC: PROFESSIONAL LOGGING (Industry Standard)
-# In a real job, you don't use 'print' because you can't see it on a server.
 logger = logging.getLogger(__name__)
 
+
+# ==============================
+# DATA VALIDATION MODEL
+# ==============================
+
 class ResumeData(BaseModel):
-    # Field(...) ensures the text isn't just an empty string
     text: str = Field(..., min_length=1)
     skills: Set[str] = Field(default_factory=set)
     email: str = "N/A"
 
+
+# ==============================
+# PDF TEXT EXTRACTION
+# ==============================
+
 def extract_text_from_pdf(path: str) -> str:
-    """
-    Logic: The Safety Net.
-    Imagination: A conveyor belt that stops if the item is broken.
-    """
     try:
         text_content = []
+
         with open(path, "rb") as f:
             reader = PyPDF2.PdfReader(f)
-            # 2026 PRO TIP: Check if the PDF is encrypted/locked
+
             if reader.is_encrypted:
-                logger.error(f"Access Denied: PDF at {path} is encrypted.")
+                logger.error(f"Encrypted PDF: {path}")
                 return ""
-                
+
             for page in reader.pages:
                 extracted = page.extract_text()
                 if extracted:
                     text_content.append(extracted)
-        
+
         return " ".join(text_content).strip()
 
     except FileNotFoundError:
-        logger.error(f"IO Error: File missing at {path}")
-        return ""
-    except Exception as e:
-        logger.error(f"Critical Extraction Failure: {e}")
+        logger.error(f"File not found: {path}")
         return ""
 
-# 2. LOGIC: THE SERVICE LAYER (The "Manager")
-# This is what your views.py should actually call.
+    except Exception as e:
+        logger.error(f"Extraction error: {e}")
+        return ""
+
+
+# ==============================
+# CLEAN DATA PIPELINE
+# ==============================
+
 def get_clean_resume_payload(path: str) -> Optional[ResumeData]:
-    """
-    Logic: Ensures only VALIDATED data reaches your Matcher.
-    If it returns None, your View knows to show an error to the user.
-    """
+
     raw_text = extract_text_from_pdf(path)
-    
+
     if not raw_text:
         return None
 
     try:
-        # We wrap the text in our Pydantic 'Blueprint'
         return ResumeData(text=raw_text)
     except ValidationError as e:
-        logger.error(f"Data Schema Mismatch: {e.json()}")
+        logger.error(f"Validation error: {e.json()}")
         return None
 
-def process_resume_and_save(resume_id: int) -> bool:
-    """
-    LOGIC: The Coordinator. 
-    It fetches the DB record, runs the 'Conveyor Belt' (extraction), 
-    and saves the results back to the database.
-    """
-    try:
-        # 1. Fetch from Database
-        resume = Resume.objects.get(id=resume_id)
-        
-        # 2. Use your "Manager" logic to get clean data
-        data = get_clean_resume_payload(resume.file.path)
-        
-        if not data:
-            logger.error(f"Failed to process Resume ID {resume_id}")
-            return False
-            
-        # 3. Update Database (The Persistence layer)
-        resume.extracted_text = data.text
-        resume.save()
-        
-        return True
 
-    except Resume.DoesNotExist:
-        logger.error(f"Database Error: Resume {resume_id} not found.")
-        return False
+# ==============================
+# KEYWORD MATCH SCORE
+# ==============================
 
-def realistic_ats_score(resume_text: str, jd_text: str):
-    """
-    LOGIC: Multi-factor Scoring Engine.
-    IMAGINATION: A judge with a checklist looking for specific 'Green Flags'.
-    """
-    text = resume_text.upper()
-    jd = jd_text.upper()
-    score = 0
+def keyword_match_score(resume_text: str, jd_text: str):
+
+    if not jd_text:
+        return 0, []
+
+    resume_words = set(re.findall(r'\b\w+\b', resume_text.lower()))
+    jd_words = set(re.findall(r'\b\w+\b', jd_text.lower()))
+
+    common = resume_words.intersection(jd_words)
+
+    score = int((len(common) / len(jd_words)) * 100) if jd_words else 0
+
+    return score, list(common)[:10]
+
+
+# ==============================
+# MISSING SKILLS
+# ==============================
+
+def missing_skills(resume_text: str, jd_text: str):
+
+    resume_words = set(re.findall(r'\b\w+\b', resume_text.lower()))
+    jd_words = set(re.findall(r'\b\w+\b', jd_text.lower()))
+
+    missing = jd_words - resume_words
+
+    return list(missing)[:10]
+
+
+# ==============================
+# RESUME SUGGESTIONS
+# ==============================
+
+def resume_suggestions(score: int):
+
+    suggestions = []
+
+    if score < 40:
+        suggestions.append("Add more relevant technical skills.")
+        suggestions.append("Include project descriptions.")
+
+    if score < 60:
+        suggestions.append("Match keywords from the job description.")
+
+    if score < 80:
+        suggestions.append("Add measurable achievements.")
+
+    suggestions.append("Use strong action verbs like 'developed', 'implemented', 'designed'.")
+
+    return suggestions
+
+
+# ==============================
+# ATS SCORE ENGINE
+# ==============================
+
+import re
+
+def realistic_ats_score(resume_text, job_description):
+
+    resume_text = resume_text.lower()
+    job_description = job_description.lower()
+
     breakdown = {}
 
-    # 1. JD KEYWORD MATCH (25 pts) - O(1) Set Logic
-    resume_words = set(re.findall(r'\b[A-Z]{3,}\b', text))
-    jd_words = set(re.findall(r'\b[A-Z]{3,}\b', jd))
-    
-    if jd_words:
-        matched = jd_words & resume_words
-        keyword_score = min((len(matched) / len(jd_words)) * 25, 25)
+    # -----------------------
+    # 1️⃣ JD Match (30)
+    # -----------------------
+    if not job_description.strip():
+        jd_score = 0
     else:
-        keyword_score = 10 # Neutral default
-    score += keyword_score
-    breakdown['JD Match'] = round(keyword_score, 1)
+        resume_words = set(re.findall(r'\w+', resume_text))
+        jd_words = set(re.findall(r'\w+', job_description))
 
-    # 2. STRUCTURE DETECTION (15 pts)
-    # Pro Logic: Checking for standard ATS sections
-    sections = ['EXPERIENCE', 'PROJECTS', 'EDUCATION', 'SKILLS', 'SUMMARY']
-    found_sections = sum(1 for sec in sections if sec in text)
-    structure_score = min(found_sections * 3, 15)
-    score += structure_score
-    breakdown['Structure'] = structure_score
+        matches = resume_words.intersection(jd_words)
 
-    # 3. TECHNICAL DEPTH (10 pts)
-    # Pro Logic: Checking for 'High-Stake' tools
-    tech_stack = {'DJANGO', 'DOCKER', 'AWS', 'POSTGRESQL', 'REDIS', 'API'}
-    tech_hits = tech_stack & resume_words
-    tech_score = min(len(tech_hits) * 2, 10)
-    score += tech_score
-    breakdown['Tech Depth'] = tech_score
+        jd_score = min(len(matches) * 2, 30)
 
-    # 4. FORMATTING & LENGTH (50 pts - Default Base)
-    # Most ATS give a base score for a readable length
-    base_score = 40 if 300 < len(resume_text) < 5000 else 20
-    score += base_score
-    breakdown['Formatting'] = base_score
+    breakdown["JD Match"] = jd_score
 
-    return min(100, round(score)), breakdown
 
-    
-    
+    # -----------------------
+    # 2️⃣ Skills Match (25)
+    # -----------------------
+    tech_keywords = [
+        "python","django","flask","sql","mysql",
+        "postgresql","api","rest","docker","aws",
+        "git","linux","pandas","numpy","machine learning",
+        "html","css","javascript","react","node"
+    ]
+
+    skill_hits = sum(1 for skill in tech_keywords if skill in resume_text)
+
+    skills_score = min(skill_hits * 3, 25)
+
+    breakdown["Skills Match"] = skills_score
+
+
+    # -----------------------
+    # 3️⃣ Resume Structure (20)
+    # -----------------------
+    sections = [
+        "education",
+        "experience",
+        "skills",
+        "projects",
+        "certifications",
+        "summary"
+    ]
+
+    section_hits = sum(1 for section in sections if section in resume_text)
+
+    structure_score = min(section_hits * 4, 20)
+
+    breakdown["Structure"] = structure_score
+
+
+    # -----------------------
+    # 4️⃣ Experience Depth (15)
+    # -----------------------
+    experience_words = [
+        "developed",
+        "implemented",
+        "built",
+        "designed",
+        "created",
+        "led",
+        "managed"
+    ]
+
+    exp_hits = sum(1 for word in experience_words if word in resume_text)
+
+    experience_score = min(exp_hits * 3, 15)
+
+    breakdown["Experience Depth"] = experience_score
+
+
+    # -----------------------
+    # 5️⃣ Formatting (10)
+    # -----------------------
+    formatting_score = 0
+
+    word_count = len(resume_text.split())
+
+    if word_count > 200:
+        formatting_score += 5
+
+    if "\n" in resume_text:
+        formatting_score += 5
+
+    breakdown["Formatting"] = formatting_score
+
+
+    # -----------------------
+    # Final Score
+    # -----------------------
+    total_score = sum(breakdown.values())
+
+    return total_score, breakdown
