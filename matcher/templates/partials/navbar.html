@@ -1,0 +1,37 @@
+{% load static %}
+
+<div style="
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:12px 20px;
+    background:#1f2937;
+    color:white;
+">
+
+    <!-- LEFT: APP NAME -->
+    <div style="font-size:18px; font-weight:bold;">
+        SkillMatch
+    </div>
+
+    <!-- RIGHT: USER + LINKS -->
+    <div style="display:flex; align-items:center; gap:18px;">
+
+        <span style="font-size:14px; color:#d1d5db;">
+            👤 {{ request.user.username }}
+        </span>
+
+        <a href="{% url 'upload_resume' %}" style="color:white;">
+            Upload
+        </a>
+
+        <a href="{% url 'resume_history' %}" style="color:white;">
+            History
+        </a>
+
+        <a href="{% url 'logout' %}" style="color:#fca5a5;">
+            Logout
+        </a>
+
+    </div>
+</div>
