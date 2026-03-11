@@ -1,21 +1,14 @@
-# skillmatch
-README.md content:
-# SkillMatch - AI-Powered JD & Resume Matcher
+# SkillMatch ATS Engine 🚀
 
-## Features
-- PDF/DOCX resume parsing
-- JD-Resume skill matching with scoring
-- ATS compatibility analysis
-- Django web interface
+An intelligent resume analysis system built for the 2026 recruitment landscape.
 
-## Tech Stack
-- Python, Django
-- spaCy NLP
-- scikit-learn
-- PDF parsing
+### 🛠️ Key Technical Upgrades
+- **High-Speed Matching:** Implemented `Set Intersection` logic ($O(1)$ lookup) replacing legacy $O(n^2)$ loops.
+- **Data Integrity:** Integrated **Pydantic** models to sanitize "dirty" text data from PDF extractions.
+- **System Architecture:** Decoupled business logic into `services.py` for professional scalability.
+- **Automated Reporting:** Generates dynamic PDF reports using **ReportLab** with null-safe data handling.
 
-## Quick Start
-```bash
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py runserver
+### 🚀 Tech Stack
+- **Backend:** Python 3.12, Django 5.x
+- **Database:** PostgreSQL
+- **Tools:** PyPDF2, Pydantic, ReportLab
