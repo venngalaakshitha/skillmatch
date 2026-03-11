@@ -1,122 +1,80 @@
 from io import BytesIO
-
+from typing import List, Tuple, Any # PRO TOPIC: Type Hinting
 from reportlab.lib.pagesizes import A4
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 
+# Import your existing logic
 from resume_diagnostics_engine.skill_extractor import extract_explicit_skills
 from resume_diagnostics_engine.role_recommender import suggest_roles
 from resume_diagnostics_engine.jd_matcher import calculate_jd_match
 
-
-def generate_resume_report(resume):
+def generate_resume_report(resume: Any) -> BytesIO: # LOGIC: Define Return Type
+    """
+    Generates a PDF analysis report. 
+    Logic: Uses a 'Story' buffer to build the document step-by-step.
+    """
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4)
-
     styles = getSampleStyleSheet()
     story = []
 
-    # ===== TITLE =====
+    # 1. LOGIC: NULL-SAFETY (Defensive Programming)
+    # Never assume resume.user or resume.extracted_text exists!
+    username = getattr(resume.user, 'username', 'Unknown User')
+    upload_date = resume.uploaded_at.strftime('%d %b %Y') if resume.uploaded_at else "N/A"
+    extracted_text = resume.extracted_text or ""
+
+    # ===== HEADER SECTION =====
     story.append(Paragraph("ATS Resume Analysis Report", styles["Title"]))
     story.append(Spacer(1, 12))
-
-    # ===== BASIC INFO =====
-    story.append(Paragraph(
-        f"<b>User:</b> {resume.user.username}",
-        styles["Normal"]
-    ))
-    story.append(Paragraph(
-        f"<b>Uploaded On:</b> {resume.uploaded_at.strftime('%d %b %Y')}",
-        styles["Normal"]
-    ))
+    story.append(Paragraph(f"<b>User:</b> {username}", styles["Normal"]))
+    story.append(Paragraph(f"<b>Uploaded On:</b> {upload_date}", styles["Normal"]))
     story.append(Spacer(1, 12))
 
-    # ===== ATS SCORE =====
-    if resume.ats_score is not None:
-        story.append(Paragraph(
-            f"<b>ATS Score:</b> {resume.ats_score}/100",
-            styles["Heading2"]
-        ))
-        story.append(Spacer(1, 10))
+    # ===== SCORE LOGIC =====
+    # 2026 Recruiter Tip: Use f-strings for clean formatting
+    ats_score = resume.ats_score if resume.ats_score is not None else 0
+    story.append(Paragraph(f"<b>ATS Score:</b> {ats_score}/100", styles["Heading2"]))
+    story.append(Spacer(1, 10))
 
-    # ===== SUGGESTED ROLE =====
-    if resume.suggested_role:
-        story.append(Paragraph(
-            f"<b>Suggested Role:</b> {resume.suggested_role}",
-            styles["Normal"]
-        ))
-        story.append(Spacer(1, 12))
-
-    # ===== SKILLS ANALYSIS =====
-    skills = extract_explicit_skills(resume.extracted_text or "")
-
+    # ===== SKILLS & JD MATCH LOGIC =====
+    skills: List[str] = extract_explicit_skills(extracted_text)
+    
     story.append(Paragraph("Detected Skills", styles["Heading2"]))
-    if skills:
-        story.append(Paragraph(", ".join(skills), styles["Normal"]))
-    else:
-        story.append(Paragraph("No skills detected", styles["Normal"]))
-
+    skill_text = ", ".join(skills) if skills else "No skills detected"
+    story.append(Paragraph(skill_text, styles["Normal"]))
     story.append(Spacer(1, 14))
 
-    # ===== JOB DESCRIPTION MATCH =====
+    # 2. LOGIC: THE CONDITIONAL OVERLAY
     if resume.job_description:
+        # Pass data to our "Set-based" matcher
         jd_score, missing_keywords = calculate_jd_match(
-            resume_text=resume.extracted_text,
+            resume_text=extracted_text,
             jd_text=resume.job_description
         )
 
         story.append(Paragraph("Job Description Match", styles["Heading2"]))
-        story.append(Paragraph(
-            f"JD Match Score: <b>{jd_score}%</b>",
-            styles["Normal"]
-        ))
-        story.append(Spacer(1, 6))
-
+        story.append(Paragraph(f"JD Match Score: <b>{jd_score}%</b>", styles["Normal"]))
+        
+        # LOGIC: Visual Feedback
         if missing_keywords:
-            story.append(Paragraph(
-                "Missing JD Skills:",
-                styles["Normal"]
-            ))
-            story.append(Paragraph(
-                ", ".join(missing_keywords),
-                styles["Normal"]
-            ))
+            story.append(Paragraph("<b>Missing Critical Skills:</b>", styles["Normal"]))
+            story.append(Paragraph(", ".join(missing_keywords), styles["Normal"]))
         else:
-            story.append(Paragraph(
-                "No critical JD skills missing 🎯",
-                styles["Normal"]
-            ))
-
+            story.append(Paragraph("Match Status: 🎯 All critical skills present!", styles["Normal"]))
         story.append(Spacer(1, 14))
 
-    # ===== ROLE INSIGHT =====
-    roles = suggest_roles(skills)
-
-    story.append(Paragraph("Skill Insight", styles["Heading2"]))
-
-    if roles:
-        story.append(Paragraph(
-            f"Best matched role: <b>{roles[0]}</b>",
-            styles["Normal"]
-        ))
-        story.append(Paragraph(
-            "Add more role-specific keywords to improve ATS score.",
-            styles["Normal"]
-        ))
-    else:
-        story.append(Paragraph(
-            "Insufficient skill data to recommend roles.",
-            styles["Normal"]
-        ))
-
-    story.append(Spacer(1, 20))
-
     # ===== FOOTER =====
-    story.append(Paragraph(
-        "<i>Generated by SkillMatch ATS Engine</i>",
-        styles["Italic"]
-    ))
+    story.append(Spacer(1, 20))
+    story.append(Paragraph("<i>Generated by SkillMatch ATS Engine (v2.0)</i>", styles["Italic"]))
 
-    doc.build(story)
-    buffer.seek(0)
-    return buffer
+    # 3. LOGIC: BUFFER MANAGEMENT
+    try:
+        doc.build(story)
+        buffer.seek(0)
+        return buffer
+    except Exception as e:
+        # If PDF building fails, return an empty buffer or log it
+        print(f"Report Generation Error: {e}")
+        return BytesIO()
