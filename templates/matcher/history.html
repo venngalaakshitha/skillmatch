@@ -12,7 +12,6 @@
 
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-
 </head>
 
 <body class="bg-light">
@@ -41,12 +40,10 @@
                     <tbody>
 
                         {% for resume in resumes %}
-
                         <tr>
 
                             <!-- ATS Score -->
                             <td>
-
                                 {% if resume.ats_score >= 80 %}
                                 <span class="badge bg-success fs-6">
                                     {% elif resume.ats_score >= 60 %}
@@ -54,10 +51,8 @@
                                         {% else %}
                                         <span class="badge bg-danger fs-6">
                                             {% endif %}
-
                                             {{ resume.ats_score|floatformat:0 }}%
                                         </span>
-
                             </td>
 
                             <!-- Suggested Role -->
@@ -69,21 +64,15 @@
 
                             <!-- Skills -->
                             <td>
-
                                 {% if resume.detected_skills %}
-
                                 <span class="badge bg-secondary me-1">
                                     {{ resume.detected_skills|truncatechars:30 }}
                                 </span>
-
                                 {% else %}
-
                                 <span class="text-muted">
                                     No skills detected
                                 </span>
-
                                 {% endif %}
-
                             </td>
 
                             <!-- Date -->
@@ -93,55 +82,41 @@
 
                             <!-- Actions -->
                             <td>
-
                                 <div class="btn-group">
 
                                     <!-- View -->
-                                    <a href="{% url 'resume_view' resume.id %}" class="btn btn-sm btn-outline-info"
-                                        title="View Analysis">
-
+                                    <a href="{% url 'matcher:resume_view' resume.id %}"
+                                        class="btn btn-sm btn-outline-info" title="View Analysis">
                                         <i class="fas fa-eye"></i>
-
                                     </a>
 
                                     <!-- PDF -->
                                     {% if resume.report_pdf %}
-
                                     <a href="{{ resume.report_pdf.url }}" target="_blank"
                                         class="btn btn-sm btn-outline-primary" title="Download PDF">
-
                                         <i class="fas fa-file-pdf"></i>
-
                                     </a>
-
                                     {% endif %}
 
                                     <!-- Delete -->
-                                    <form method="POST" action="{% url 'delete_resume' resume.id %}"
+                                    <form method="POST" action="{% url 'matcher:delete_resume' resume.id %}"
                                         onsubmit="return confirm('Delete this analysis?')">
 
                                         {% csrf_token %}
 
                                         <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
-
                                             <i class="fas fa-trash"></i>
-
                                         </button>
-
                                     </form>
 
                                 </div>
-
                             </td>
 
                         </tr>
 
                         {% empty %}
-
                         <tr>
-
                             <td colspan="5" class="text-center py-5">
-
                                 <i class="fas fa-file-invoice fa-3x text-muted mb-3"></i>
 
                                 <h5 class="text-muted">
@@ -152,17 +127,12 @@
                                     Upload a resume to start analysis.
                                 </p>
 
-                                <a href="{% url 'upload_resume' %}" class="btn btn-primary btn-lg">
-
+                                <a href="{% url 'matcher:upload_resume' %}" class="btn btn-primary btn-lg">
                                     <i class="fas fa-upload me-2"></i>
                                     Analyze Resume
-
                                 </a>
-
                             </td>
-
                         </tr>
-
                         {% endfor %}
 
                     </tbody>
@@ -173,16 +143,11 @@
         </div>
 
         <!-- New Analysis Button -->
-
         <div class="text-center mt-4">
-
-            <a href="{% url 'upload_resume' %}" class="btn btn-primary btn-lg">
-
+            <a href="{% url 'matcher:upload_resume' %}" class="btn btn-primary btn-lg">
                 <i class="fas fa-plus me-2"></i>
                 New Analysis
-
             </a>
-
         </div>
 
     </div>
