@@ -1,3 +1,5 @@
+from .services import ai_resume_suggestions
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
@@ -90,6 +92,8 @@ def upload_resume(request):
         jd_score, jd_matched = jd_match_score(extracted_text, job_description)
         skill_gaps = skill_gap_analysis(extracted_text, job_description)
 
+        ai_suggestions, improved_lines = ai_resume_suggestions(extracted_text, job_description)
+
         # Save
         resume.extracted_text = extracted_text
         resume.ats_score = ats_score
@@ -110,6 +114,8 @@ def upload_resume(request):
             "jd_class": get_score_class(jd_score),
             "jd_matched": jd_matched,
             "skill_gaps": skill_gaps,
+            "ai_suggestions": ai_suggestions,
+            "improved_lines": improved_lines,
         })
 
     return render(request, "matcher/upload.html")

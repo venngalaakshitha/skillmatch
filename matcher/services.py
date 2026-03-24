@@ -280,3 +280,54 @@ def skill_gap_analysis(resume_text, jd_text):
     missing = jd_keywords - resume_keywords
 
     return list(missing)[:15]
+
+def ai_resume_suggestions(resume_text, job_description=""):
+    suggestions = []
+    improved_lines = []
+
+    lines = resume_text.split("\n")
+
+    # Weak words to detect
+    weak_words = ["worked on", "responsible for", "did", "helped", "made"]
+
+    for line in lines:
+        clean = line.strip().lower()
+        if "team" in clean:
+            suggestions.append("Highlight your individual contribution, not just team involvement.")
+
+        # Detect weak phrases
+        for word in weak_words:
+            if word in clean:
+                improved = line.lower().replace(word, "").strip().capitalize()
+                improved = "Developed " + improved
+                improved_lines.append((line, improved))
+                suggestions.append(f"Rewrite: '{line}' → '{improved}'")
+                break
+
+    # Action verbs check
+    strong_verbs = ["developed", "designed", "implemented", "engineered"]
+    if not any(verb in resume_text.lower() for verb in strong_verbs):
+        suggestions.append("Use strong action verbs like Developed, Designed, Implemented.")
+
+    # Quantification check
+    if "%" not in resume_text:
+        suggestions.append("Add measurable results (e.g., Increased efficiency by 30%).")
+
+    # Project presence
+    if "project" not in resume_text.lower():
+        suggestions.append("Add project section to showcase practical experience.")
+
+    # JD-based suggestions
+    if job_description:
+        jd_words = set(job_description.lower().split())
+        resume_words = set(resume_text.lower().split())
+
+        missing = jd_words - resume_words
+
+        if missing:
+            top_missing = list(missing)[:5]
+            suggestions.append(
+                f"Add relevant keywords from JD: {', '.join(top_missing)}"
+            )
+
+    return suggestions, improved_lines

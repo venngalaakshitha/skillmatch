@@ -92,18 +92,25 @@
         </div>
 
         <!-- SUGGESTIONS -->
-        <div class="card shadow-sm mb-4">
+        {% if improved_lines %}
+        <div class="card mt-4 shadow-sm border-primary">
             <div class="card-body">
-                <h5>Resume Improvement Suggestions</h5>
-                <ul class="list-group">
-                    {% for s in suggestions %}
-                    <li class="list-group-item">{{ s }}</li>
-                    {% empty %}
-                    <li class="list-group-item text-muted">No suggestions available</li>
-                    {% endfor %}
-                </ul>
+                <h5 class="text-primary">✨ Suggested Improvements</h5>
+
+                {% for original, improved in improved_lines %}
+                <div class="mb-3">
+                    <p class="text-muted mb-1">
+                        ❌ {{ original }}
+                    </p>
+                    <p class="fw-bold text-success">
+                        ✅ {{ improved }}
+                    </p>
+                </div>
+                {% endfor %}
+
             </div>
         </div>
+        {% endif %}
 
         <!-- RESUME TEXT -->
         <div class="card shadow-sm mb-4">
