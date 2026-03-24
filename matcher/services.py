@@ -229,3 +229,54 @@ def realistic_ats_score(resume_text, job_description):
     total_score = sum(breakdown.values())
 
     return total_score, breakdown
+
+# ========================================
+# JD MATCHING + SKILL GAP (ADD BELOW ALL EXISTING FUNCTIONS)
+# ========================================
+
+import re
+
+def clean_text(text):
+    text = text.lower()
+    text = re.sub(r'[^a-zA-Z0-9\s]', ' ', text)
+    return text
+
+
+def extract_keywords(text):
+    words = clean_text(text).split()
+
+    stopwords = {
+        "and", "or", "the", "is", "in", "at", "of", "for",
+        "a", "to", "with", "on", "as", "by", "an"
+    }
+
+    return set([w for w in words if w not in stopwords and len(w) > 2])
+
+
+def jd_match_score(resume_text, jd_text):
+    if not jd_text:
+        return 0, []
+
+    resume_keywords = extract_keywords(resume_text)
+    jd_keywords = extract_keywords(jd_text)
+
+    matched = resume_keywords.intersection(jd_keywords)
+
+    if len(jd_keywords) == 0:
+        return 0, []
+
+    score = int((len(matched) / len(jd_keywords)) * 100)
+
+    return score, list(matched)
+
+
+def skill_gap_analysis(resume_text, jd_text):
+    if not jd_text:
+        return []
+
+    resume_keywords = extract_keywords(resume_text)
+    jd_keywords = extract_keywords(jd_text)
+
+    missing = jd_keywords - resume_keywords
+
+    return list(missing)[:15]
