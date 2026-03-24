@@ -1,153 +1,130 @@
-# 🚀 SkillMatch – ATS Resume Analyzer
+# 🚀 SkillMatch ATS — Intelligent Resume Analyzer
 
-SkillMatch is a Django-based web application that simulates how an Applicant Tracking System (ATS) evaluates resumes.  
-The system allows users to log in, upload resumes (PDF/DOCX), extract text, detect skills, calculate an ATS-style score, and view analysis history.
-
-This project demonstrates practical backend engineering, resume processing, scoring logic, and corporate UI design.
+> A full-stack Applicant Tracking System (ATS) simulator that analyzes resumes, evaluates job fit, and provides actionable insights to improve hiring success.
 
 ---
 
-## ✅ Live Features
+## 🌐 Overview
 
-- Corporate Login / Signup
-- Resume Upload (PDF / DOCX)
-- Resume Text Extraction (PyPDF2 / python-docx)
-- Skill Detection (Python / Django / SQL + multiple skills)
-- ATS Scoring Algorithm (6 evaluation criteria)
-- Suggested Role Generation
-- Resume Analysis History
-- PDF Report Download
-- Resume Delete Functionality
+SkillMatch ATS is a **Django-based web application** designed to simulate how modern Applicant Tracking Systems evaluate resumes.
+
+It helps candidates:
+- Understand how their resume performs in ATS systems  
+- Identify missing skills  
+- Improve keyword optimization  
+- Match resumes against job descriptions  
 
 ---
 
-## ⚡ Quick Setup
+## ✨ Key Features
 
-```bash
+### 📊 Resume Analysis
+- ATS Score (formatting + structure + readability)
+- Resume parsing for PDF & DOCX
+- Smart content evaluation
+
+### 🎯 Job Description Matching *(Optional)*
+- Keyword Match Percentage
+- JD Match Score
+- Missing Skills Detection
+- Skill Gap Analysis
+
+### 💡 Smart Suggestions
+- Personalized resume improvement tips
+- ATS optimization recommendations
+
+### 📁 Resume Management
+- Upload & analyze resumes
+- History dashboard
+- View past reports
+- Delete records
+
+### 🔐 Authentication System
+- Secure login/signup
+- User-specific history tracking
+- Session-based access
+
+---
+
+## 🧠 How It Works
+
+```text
+Resume Upload → Text Extraction → Analysis Engine → Score Generation → Insights Display
+🔍 Analysis Engine Includes:
+Keyword extraction
+Pattern-based skill detection
+ATS scoring logic
+JD comparison algorithms
+🖥️ Tech Stack
+Layer	Technology
+Backend	Django (Python)
+Frontend	HTML, CSS, Bootstrap
+Parsing	PyPDF2, python-docx
+Database	SQLite
+Version Control	Git & GitHub
+🎨 UI Highlights
+Corporate-style dashboard
+Clean upload interface
+Dynamic navbar (Login / Logout)
+Profile dropdown
+Responsive design
+📸 Screenshots
+
+(Add screenshots here — highly recommended)
+
+🏠 Landing Page
+
+📤 Upload Interface
+
+📊 Analysis Results
+
+📁 History Dashboard
+
+🚀 Getting Started
+🔧 Installation
 git clone https://github.com/venngalaakshitha/skillmatch.git
 cd skillmatch
-
-python -m venv venv
-venv\Scripts\activate     # Windows
-
-pip install django PyPDF2 python-docx
-
-python manage.py migrate
-python manage.py createsuperuser
+pip install -r requirements.txt
+▶️ Run Server
 python manage.py runserver
-Open:
 
- http://127.0.0.1:8000/login/
-🔐 Demo Credentials
-Username: admin
-Password: admin123
-(Or create your own superuser)
+Then open:
 
-🛠️ Technology Stack
-Backend
-
-Python
-
-Django 4.2
-
-Resume Processing
-
-PyPDF2 (PDF parsing)
-
-python-docx (DOCX parsing)
-
-Frontend
-
-HTML5
-
-Bootstrap 5
-
-Font Awesome
-
-Database
-
-SQLite
-
-Authentication
-
-Django Authentication System
-
-🧠 How SkillMatch Works
-User logs in
-
-Uploads resume (PDF/DOCX) + optional Job Description
-
-PyPDF2 / python-docx extracts resume text
-
-Skill detection logic identifies technologies
-
-ATS scoring algorithm evaluates resume quality
-
-System suggests relevant job role
-
-Results stored in Resume model
-
-Displayed in analysis history dashboard
-
-📊 ATS Scoring Criteria
-SkillMatch evaluates resumes using:
-
-Structure (15%) → Resume sections (Summary, Skills, Experience)
-
-Skills (25%) → Technical skills detected
-
-JD Match (25%) → Keyword matching
-
-Experience (15%) → Experience indicators
-
-Technical Depth (10%) → Tools & technologies
-
-Formatting (10%) → ATS compatibility signals
-
-📂 Project Structure
-skillmatch/
-├── core/                # Django settings
-├── matcher/
-│   ├── views.py         # Login + ATS analysis
-│   ├── models.py        # Resume model
-│   └── templates/
-│       ├── login.html
-│       ├── upload.html
-│       └── history.html
-├── manage.py
-└── requirements.txt
-🎯 Skills Demonstrated
-Django authentication system
-
-File upload handling
-
-PDF/DOCX text extraction
-
-Resume parsing logic
-
-Skill detection algorithm
-
-ATS scoring system design
-
-Bootstrap corporate UI
-
-Database CRUD operations
-
-Debugging & validation
-
-🚀 Future Enhancements
-Advanced NLP-based skill extraction
-
-Resume vs Job Description semantic matching
-
-Visual keyword highlighting
-
-Enhanced PDF report generation
-
-Recruiter analytics dashboard
-
+http://127.0.0.1:8000/
+⚠️ Important Note
+Job Description is optional
+Without JD → system performs general ATS analysis
+With JD → system performs full job-fit evaluation
+🔮 Future Enhancements
+🤖 AI-powered resume suggestions (LLM integration)
+📄 PDF report generation
+🌐 Deployment (Render / AWS / Vercel)
+📊 Advanced analytics dashboard
+🔍 Semantic skill matching (NLP)
+🧪 Use Cases
+Students preparing for placements
+Job seekers optimizing resumes
+Recruiters screening candidates
+Career guidance platforms
+📌 Project Highlights
+End-to-end full-stack implementation
+Real-world ATS simulation
+Clean and modern UI design
+Modular and scalable architecture
 👩‍💻 Author
-Akshitha Vengala
-Python & Django Developer
 
-GitHub: https://github.com/venngalaakshitha
+Akshitha Vengala
+📌 B.Tech | Aspiring Software Engineer
+
+⭐ If you like this project
+
+Give it a ⭐ on GitHub — it helps a lot!
+
+
+---
+
+# 🚀 NEXT STEP (IMPORTANT)
+
+### 1. Create README
+```bash
+touch README.md
