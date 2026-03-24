@@ -1,130 +1,74 @@
-# 🚀 SkillMatch ATS — Intelligent Resume Analyzer
+# 🚀 SkillMatch ATS — AI Resume Coach
 
-> A full-stack Applicant Tracking System (ATS) simulator that analyzes resumes, evaluates job fit, and provides actionable insights to improve hiring success.
-
----
-
-## 🌐 Overview
-
-SkillMatch ATS is a **Django-based web application** designed to simulate how modern Applicant Tracking Systems evaluate resumes.
-
-It helps candidates:
-- Understand how their resume performs in ATS systems  
-- Identify missing skills  
-- Improve keyword optimization  
-- Match resumes against job descriptions  
+An intelligent resume analysis system that evaluates ATS compatibility and **actively improves resumes by rewriting weak content into recruiter-friendly bullet points.**
 
 ---
 
 ## ✨ Key Features
 
-### 📊 Resume Analysis
-- ATS Score (formatting + structure + readability)
-- Resume parsing for PDF & DOCX
-- Smart content evaluation
-
-### 🎯 Job Description Matching *(Optional)*
-- Keyword Match Percentage
-- JD Match Score
-- Missing Skills Detection
-- Skill Gap Analysis
-
-### 💡 Smart Suggestions
-- Personalized resume improvement tips
-- ATS optimization recommendations
-
-### 📁 Resume Management
-- Upload & analyze resumes
-- History dashboard
-- View past reports
-- Delete records
-
-### 🔐 Authentication System
-- Secure login/signup
-- User-specific history tracking
-- Session-based access
+- 📊 ATS Score Analysis  
+- 🎯 Job Description Matching  
+- 🧠 Smart Resume Suggestions  
+- ✨ Automatic Bullet Point Rewriting (AI-style)  
+- 📁 Resume History Dashboard  
+- 🔐 User Authentication  
 
 ---
 
-## 🧠 How It Works
+## 🤖 Smart Resume Optimization
 
-```text
-Resume Upload → Text Extraction → Analysis Engine → Score Generation → Insights Display
-🔍 Analysis Engine Includes:
-Keyword extraction
-Pattern-based skill detection
-ATS scoring logic
-JD comparison algorithms
-🖥️ Tech Stack
-Layer	Technology
-Backend	Django (Python)
-Frontend	HTML, CSS, Bootstrap
-Parsing	PyPDF2, python-docx
-Database	SQLite
-Version Control	Git & GitHub
-🎨 UI Highlights
-Corporate-style dashboard
-Clean upload interface
-Dynamic navbar (Login / Logout)
-Profile dropdown
-Responsive design
-📸 Screenshots
+- Detects weak phrases like:
+  - "worked on"
+  - "helped"
+  - "responsible for"
 
-(Add screenshots here — highly recommended)
+- Rewrites into:
+  - "Developed..."
+  - "Implemented..."
+  - "Designed..."
 
-🏠 Landing Page
+---
 
-📤 Upload Interface
+## 📸 Screenshots
 
-📊 Analysis Results
+### 🏠 Landing Page
+![Landing](screenshots/landing.png)
 
-📁 History Dashboard
+### 📤 Upload Interface
+![Upload](screenshots/upload.png)
 
-🚀 Getting Started
-🔧 Installation
+### 📊 Analysis Results
+![Results](screenshots/results.png)
+
+### 🤖 AI Suggestions
+![AI Suggestions](screenshots/results_ai.png)
+
+---
+
+## 🖥️ Tech Stack
+
+- Django (Backend)
+- Bootstrap (Frontend)
+- SQLite (Database)
+- PyPDF2 / python-docx (Parsing)
+
+---
+
+## 🚀 Run Locally
+
+```bash
 git clone https://github.com/venngalaakshitha/skillmatch.git
 cd skillmatch
 pip install -r requirements.txt
-▶️ Run Server
 python manage.py runserver
+💡 Key Highlight
 
-Then open:
+This project goes beyond analysis — it improves resumes automatically, simulating an AI resume coach.
 
-http://127.0.0.1:8000/
-⚠️ Important Note
-Job Description is optional
-Without JD → system performs general ATS analysis
-With JD → system performs full job-fit evaluation
-🔮 Future Enhancements
-🤖 AI-powered resume suggestions (LLM integration)
-📄 PDF report generation
-🌐 Deployment (Render / AWS / Vercel)
-📊 Advanced analytics dashboard
-🔍 Semantic skill matching (NLP)
-🧪 Use Cases
-Students preparing for placements
-Job seekers optimizing resumes
-Recruiters screening candidates
-Career guidance platforms
-📌 Project Highlights
-End-to-end full-stack implementation
-Real-world ATS simulation
-Clean and modern UI design
-Modular and scalable architecture
 👩‍💻 Author
 
 Akshitha Vengala
-📌 B.Tech | Aspiring Software Engineer
-
-⭐ If you like this project
-
-Give it a ⭐ on GitHub — it helps a lot!
 
 
 ---
 
-# 🚀 NEXT STEP (IMPORTANT)
-
-### 1. Create README
-```bash
-touch README.md
