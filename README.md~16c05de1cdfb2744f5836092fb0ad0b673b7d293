@@ -1,14 +1,1 @@
-# SkillMatch ATS Engine 🚀
 
-An intelligent resume analysis system built for the 2026 recruitment landscape.
-
-### 🛠️ Key Technical Upgrades
-- **High-Speed Matching:** Implemented `Set Intersection` logic ($O(1)$ lookup) replacing legacy $O(n^2)$ loops.
-- **Data Integrity:** Integrated **Pydantic** models to sanitize "dirty" text data from PDF extractions.
-- **System Architecture:** Decoupled business logic into `services.py` for professional scalability.
-- **Automated Reporting:** Generates dynamic PDF reports using **ReportLab** with null-safe data handling.
-
-### 🚀 Tech Stack
-- **Backend:** Python 3.12, Django 5.x
-- **Database:** PostgreSQL
-- **Tools:** PyPDF2, Pydantic, ReportLab
