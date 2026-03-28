@@ -57,11 +57,11 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# =========================================
-# URLS / TEMPLATES / WSGI
-# =========================================
 ROOT_URLCONF = 'core.urls'
 
+# =========================================
+# TEMPLATES
+# =========================================
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
