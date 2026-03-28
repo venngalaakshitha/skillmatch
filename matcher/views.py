@@ -1,11 +1,14 @@
-from .services import ai_resume_suggestions
+import os
+import docx
+import PyPDF2
 
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from django.views.decorators.http import require_POST
-from django.contrib.auth import login as auth_login
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib import messages
+from django.utils import timezone
+from django.contrib.auth import login
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.views.decorators.http import require_POST
 
 from .models import Resume
 from .services import (
@@ -14,50 +17,111 @@ from .services import (
     missing_skills,
     resume_suggestions,
     jd_match_score,
-    skill_gap_analysis
+    skill_gap_analysis,
+    diagnose_resume,
+    ai_resume_suggestions,
+    extract_technical_skills,
+    detect_ats_template_risk,
 )
 
-import PyPDF2
-from docx import Document
+
+# =========================================
+# BASIC PAGES
+# =========================================
+
+def index(request):
+    return render(request, "matcher/index.html")
 
 
-# ===================================================
-# FILE TEXT EXTRACTION (PDF + DOCX)
-# ===================================================
-def extract_text(file):
-    text = ""
+def signup_view(request):
+    if request.user.is_authenticated:
+        return redirect("matcher:index")
+
+    if request.method == "POST":
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            messages.success(request, "Account created successfully.")
+            return redirect("matcher:index")
+        else:
+            messages.error(request, "Please correct the errors below.")
+    else:
+        form = UserCreationForm()
+
+    return render(request, "matcher/signup.html", {"form": form})
+
+
+def user_login(request):
+    if request.user.is_authenticated:
+        return redirect("matcher:index")
+
+    if request.method == "POST":
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            login(request, user)
+            messages.success(request, "Logged in successfully.")
+            return redirect("matcher:index")
+        else:
+            messages.error(request, "Invalid username or password.")
+    else:
+        form = AuthenticationForm()
+
+    return render(request, "matcher/login.html", {"form": form})
+
+
+# =========================================
+# FILE TEXT EXTRACTION
+# =========================================
+
+def extract_text(file_path):
+    """
+    Extract text from PDF or DOCX file.
+    """
+    ext = os.path.splitext(file_path)[1].lower()
+
     try:
-        if file.name.lower().endswith(".pdf"):
-            reader = PyPDF2.PdfReader(file)
-            for page in reader.pages:
-                text += page.extract_text() or ""
+        if ext == ".pdf":
+            text = ""
+            with open(file_path, "rb") as f:
+                reader = PyPDF2.PdfReader(f)
+                for page in reader.pages:
+                    page_text = page.extract_text()
+                    if page_text:
+                        text += page_text + "\n"
+            return text.strip()
 
-        elif file.name.lower().endswith(".docx"):
-            doc = Document(file)
-            for para in doc.paragraphs:
-                text += para.text + "\n"
+        elif ext == ".docx":
+            doc = docx.Document(file_path)
+            return "\n".join(
+                [para.text for para in doc.paragraphs if para.text.strip()]
+            ).strip()
 
-    except Exception:
-        return None
+        return ""
 
-    return text.strip()
+    except Exception as e:
+        print(f"Extraction error: {e}")
+        return ""
 
 
-# ===================================================
-# HELPER: SCORE CLASS
-# ===================================================
+# =========================================
+# SCORE CLASS HELPER
+# =========================================
+
 def get_score_class(score):
     if score >= 80:
         return "bg-success"
     elif score >= 60:
-        return "bg-warning"
+        return "bg-warning text-dark"
     return "bg-danger"
 
 
-# ===================================================
-# UPLOAD + ANALYSIS
-# ===================================================
-@login_required
+# =========================================
+# MAIN ANALYSIS
+# =========================================
+
+@login_required(login_url="matcher:login")
 def upload_resume(request):
     if request.method == "POST":
         resume_file = request.FILES.get("resume")
@@ -67,157 +131,133 @@ def upload_resume(request):
             messages.error(request, "Please upload a resume file.")
             return redirect("matcher:upload_resume")
 
-        if not resume_file.name.lower().endswith((".pdf", ".docx")):
-            messages.error(request, "Only PDF and DOCX files are allowed.")
+        file_ext = os.path.splitext(resume_file.name)[1].lower()
+        if file_ext not in [".pdf", ".docx"]:
+            messages.error(request, "Only PDF and DOCX files are supported.")
             return redirect("matcher:upload_resume")
 
+        # Save uploaded file
         resume = Resume.objects.create(
             user=request.user,
             file=resume_file,
             job_description=job_description
         )
 
-        extracted_text = extract_text(resume_file)
+        # Extract resume text
+        resume_text = extract_text(resume.file.path)
 
-        if not extracted_text:
-            resume.delete()
-            messages.error(request, "Failed to extract text from file.")
+        if not resume_text.strip():
+            resume.extracted_text = ""
+            resume.analyzed_at = timezone.now()
+            resume.save()
+
+            messages.error(
+                request,
+                "Could not extract text from this resume. Please upload a cleaner PDF or DOCX file."
+            )
             return redirect("matcher:upload_resume")
 
-        # Analysis
-        ats_score, breakdown = realistic_ats_score(extracted_text, job_description)
-        keyword_score, matched_keywords = keyword_match_score(extracted_text, job_description)
-        missing = missing_skills(extracted_text, job_description)
+        # Run analysis
+        ats_score, breakdown = realistic_ats_score(resume_text, job_description)
+        keyword_score, matched_keywords = keyword_match_score(resume_text, job_description)
+        missing = missing_skills(resume_text, job_description)
+        jd_score, jd_matched = jd_match_score(resume_text, job_description)
+        skill_gap = skill_gap_analysis(resume_text, job_description)
         suggestions = resume_suggestions(ats_score)
-        jd_score, jd_matched = jd_match_score(extracted_text, job_description)
-        skill_gaps = skill_gap_analysis(extracted_text, job_description)
+        ai_suggestions, improved_lines = ai_resume_suggestions(resume_text, job_description)
+        resume_diagnosis = diagnose_resume(resume_text)
+        detected_skills = extract_technical_skills(resume_text)
+        ats_template_risk = detect_ats_template_risk(resume_text)
 
-        ai_suggestions, improved_lines = ai_resume_suggestions(extracted_text, job_description)
-
-        # Save
-        resume.extracted_text = extracted_text
+        # Save result summary
+        resume.extracted_text = resume_text
         resume.ats_score = ats_score
+        resume.detected_skills = ", ".join(detected_skills)
+        resume.analyzed_at = timezone.now()
         resume.save()
 
-        messages.success(request, f"ATS Score: {ats_score}%")
-
-        return render(request, "matcher/results.html", {
+        context = {
             "resume": resume,
             "ats_score": ats_score,
             "ats_class": get_score_class(ats_score),
             "breakdown": breakdown,
             "keyword_score": keyword_score,
             "matched_keywords": matched_keywords,
-            "missing_skills": missing,
+            "missing": missing,
             "suggestions": suggestions,
             "jd_score": jd_score,
             "jd_class": get_score_class(jd_score),
             "jd_matched": jd_matched,
-            "skill_gaps": skill_gaps,
+            "skill_gap": skill_gap,
             "ai_suggestions": ai_suggestions,
             "improved_lines": improved_lines,
-        })
+            "resume_text": resume_text,
+            "resume_diagnosis": resume_diagnosis,
+            "detected_skills": detected_skills,
+            "ats_template_risk": ats_template_risk,
+        }
+
+        return render(request, "matcher/results.html", context)
 
     return render(request, "matcher/upload.html")
 
-from django.shortcuts import render
 
-def index(request):
-    return render(request, 'matcher/index.html')
+# =========================================
+# HISTORY / REPORTS
+# =========================================
+
+@login_required(login_url="matcher:login")
+def history(request):
+    resumes = Resume.objects.filter(user=request.user).order_by("-uploaded_at")
+    return render(request, "matcher/history.html", {"resumes": resumes})
 
 
-# ===================================================
-# VIEW REPORT
-# ===================================================
-@login_required
+@login_required(login_url="matcher:login")
 def view_resume_report(request, resume_id):
     resume = get_object_or_404(Resume, id=resume_id, user=request.user)
-    extracted_text = resume.extracted_text or ""
 
-    ats_score, breakdown = realistic_ats_score(extracted_text, resume.job_description or "")
-    keyword_score, matched_keywords = keyword_match_score(extracted_text, resume.job_description or "")
-    missing = missing_skills(extracted_text, resume.job_description or "")
+    resume_text = resume.extracted_text or ""
+    job_description = resume.job_description or ""
+
+    ats_score, breakdown = realistic_ats_score(resume_text, job_description)
+    keyword_score, matched_keywords = keyword_match_score(resume_text, job_description)
+    missing = missing_skills(resume_text, job_description)
+    jd_score, jd_matched = jd_match_score(resume_text, job_description)
+    skill_gap = skill_gap_analysis(resume_text, job_description)
     suggestions = resume_suggestions(ats_score)
-    jd_score, jd_matched = jd_match_score(extracted_text, resume.job_description or "")
-    skill_gaps = skill_gap_analysis(extracted_text, resume.job_description or "")
+    ai_suggestions, improved_lines = ai_resume_suggestions(resume_text, job_description)
+    resume_diagnosis = diagnose_resume(resume_text)
+    detected_skills = extract_technical_skills(resume_text)
+    ats_template_risk = detect_ats_template_risk(resume_text)
 
-    return render(request, "matcher/results.html", {
+    context = {
         "resume": resume,
         "ats_score": ats_score,
         "ats_class": get_score_class(ats_score),
         "breakdown": breakdown,
         "keyword_score": keyword_score,
         "matched_keywords": matched_keywords,
-        "missing_skills": missing,
+        "missing": missing,
         "suggestions": suggestions,
         "jd_score": jd_score,
         "jd_class": get_score_class(jd_score),
         "jd_matched": jd_matched,
-        "skill_gaps": skill_gaps,
-    })
+        "skill_gap": skill_gap,
+        "ai_suggestions": ai_suggestions,
+        "improved_lines": improved_lines,
+        "resume_text": resume_text,
+        "resume_diagnosis": resume_diagnosis,
+        "detected_skills": detected_skills,
+        "ats_template_risk": ats_template_risk,
+    }
+
+    return render(request, "matcher/results.html", context)
 
 
-# ===================================================
-# HISTORY
-# ===================================================
-@login_required
-def history(request):
-    resumes = Resume.objects.filter(user=request.user).order_by("-uploaded_at")
-    return render(request, "matcher/history.html", {
-        "resumes": resumes
-    })
-
-
-# ===================================================
-# DELETE RESUME
-# ===================================================
-@login_required
+@login_required(login_url="matcher:login")
 @require_POST
 def delete_resume(request, resume_id):
     resume = get_object_or_404(Resume, id=resume_id, user=request.user)
     resume.delete()
     messages.success(request, "Resume deleted successfully.")
     return redirect("matcher:history")
-
-
-# ===================================================
-# SIGNUP
-# ===================================================
-def signup_view(request):
-    if request.method == "POST":
-        form = UserCreationForm(request.POST)
-
-        if form.is_valid():
-            user = form.save()
-            auth_login(request, user)
-            return redirect("matcher:upload_resume")
-        else:
-            messages.error(request, "Signup failed. Try again.")
-
-    else:
-        form = UserCreationForm()
-
-    return render(request, "matcher/signup.html", {
-        "form": form
-    })
-
-
-# ===================================================
-# LOGIN
-# ===================================================
-def user_login(request):
-    if request.method == "POST":
-        form = AuthenticationForm(request, data=request.POST)
-
-        if form.is_valid():
-            auth_login(request, form.get_user())
-            return redirect("matcher:upload_resume")
-        else:
-            messages.error(request, "Invalid username or password.")
-
-    else:
-        form = AuthenticationForm()
-
-    return render(request, "matcher/login.html", {
-        "form": form
-    })

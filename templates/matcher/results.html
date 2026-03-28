@@ -2,132 +2,550 @@
 <html lang="en">
 
 <head>
-    <title>Resume Analysis - SkillMatch</title>
+    <title>Resume Analysis Results | SkillMatch ATS</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- Bootstrap -->
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #f4f7fb;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar {
+            padding: 12px 28px;
+        }
+
+        .hero-box {
+            background: linear-gradient(135deg, #f8fbff 0%, #eef4ff 100%);
+            border: 1px solid #e2ebf5;
+            border-radius: 24px;
+            padding: 2.5rem 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-chip {
+            display: inline-block;
+            background: #e9f2ff;
+            color: #0d6efd;
+            font-weight: 600;
+            font-size: 0.85rem;
+            padding: 0.45rem 0.9rem;
+            border-radius: 999px;
+            margin-bottom: 1rem;
+        }
+
+        .dashboard-card {
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+            overflow: hidden;
+            height: 100%;
+        }
+
+        .dashboard-card .card-body {
+            padding: 1.6rem;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .score-box {
+            border-radius: 18px;
+            padding: 1.5rem;
+            background: #ffffff;
+            border: 1px solid #edf2f7;
+            text-align: center;
+        }
+
+        .score-number {
+            font-size: 2.3rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .score-label {
+            color: #6c757d;
+            font-size: 0.95rem;
+            margin-top: 0.4rem;
+        }
+
+        .score-pill {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.55rem 1rem;
+            border-radius: 999px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            background: #eef4ff;
+            color: #0d6efd;
+        }
+
+        .badge-skill {
+            background: #eef4ff;
+            color: #0d6efd;
+            border-radius: 999px;
+            padding: 0.5rem 0.8rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-block;
+            margin: 0.3rem 0.3rem 0 0;
+        }
+
+        .badge-missing {
+            background: #fff0f0;
+            color: #dc3545;
+            border-radius: 999px;
+            padding: 0.5rem 0.8rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-block;
+            margin: 0.3rem 0.3rem 0 0;
+        }
+
+        .list-clean {
+            padding-left: 1.2rem;
+            margin-bottom: 0;
+        }
+
+        .list-clean li {
+            margin-bottom: 0.55rem;
+        }
+
+        .risk-low {
+            background: #e9f9ef;
+            color: #198754;
+        }
+
+        .risk-moderate {
+            background: #fff4db;
+            color: #b58105;
+        }
+
+        .risk-high {
+            background: #fdeaea;
+            color: #dc3545;
+        }
+
+        .risk-pill {
+            display: inline-block;
+            padding: 0.45rem 0.9rem;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+
+        .text-block {
+            background: #fbfcfe;
+            border: 1px solid #edf2f7;
+            border-radius: 16px;
+            padding: 1rem;
+            max-height: 280px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            font-size: 0.92rem;
+            color: #495057;
+        }
+
+        .mini-card {
+            background: #fbfdff;
+            border: 1px solid #edf2f7;
+            border-radius: 16px;
+            padding: 1rem;
+            height: 100%;
+        }
+
+        .empty-text {
+            color: #6c757d;
+            font-style: italic;
+        }
+
+        .action-buttons .btn {
+            border-radius: 12px;
+        }
+
+        .metric-box {
+            background: #f8fbff;
+            border: 1px solid #e9eef5;
+            border-radius: 14px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .metric-box h6 {
+            font-weight: 700;
+            margin-bottom: 0.35rem;
+        }
+
+        .metric-box p {
+            margin-bottom: 0;
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+    </style>
 </head>
 
-<body class="bg-light">
+<body>
 
-    <div class="container mt-5">
-        <h2 class="text-center mb-4">Resume Analysis Result</h2>
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-dark bg-primary">
+        <span class="navbar-brand fw-bold">SkillMatch ATS</span>
 
-        <!-- ATS SCORE -->
-        <div class="card shadow-sm mb-4">
-            <div class="card-body">
-                <h5>ATS Score</h5>
-                <div class="progress mb-2" style="height: 18px;">
-                    <div class="progress-bar {{ ats_class }}" role="progressbar">
-                        {{ ats_score|default:0 }}%
-                    </div>
-                </div>
-            </div>
-        </div>
+        <div class="d-flex align-items-center">
+            <a href="{% url 'matcher:upload_resume' %}" class="btn btn-light btn-sm me-2">New Analysis</a>
+            <a href="{% url 'matcher:history' %}" class="btn btn-outline-light btn-sm me-3">History</a>
 
-        <!-- SCORE BREAKDOWN -->
-        <div class="card shadow-sm mb-4">
-            <div class="card-body">
-                <h5>Score Breakdown</h5>
-                <ul class="list-group">
-                    {% for key, value in breakdown.items %}
-                    <li class="list-group-item d-flex justify-content-between">
-                        <span>{{ key }}</span>
-                        <strong>{{ value }}</strong>
+            {% if user.is_authenticated %}
+            <div class="dropdown">
+                <button class="btn btn-outline-light btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                    {{ user.username }}
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                        <form method="POST" action="{% url 'matcher:logout' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="dropdown-item">Logout</button>
+                        </form>
                     </li>
-                    {% empty %}
-                    <li class="list-group-item text-muted">No breakdown data available</li>
-                    {% endfor %}
                 </ul>
             </div>
+            {% endif %}
+        </div>
+    </nav>
+
+    <div class="container py-5">
+
+        <!-- HERO -->
+        <div class="hero-box text-center">
+            <span class="section-chip">Analysis Complete</span>
+            <h1 class="fw-bold display-6 mb-3">Resume ATS Evaluation Report</h1>
+            <p class="text-muted fs-5 mb-0 mx-auto" style="max-width: 850px;">
+                Review ATS compatibility, keyword alignment, structural quality, and recruiter-style recommendations
+                to improve your resume’s shortlisting potential.
+            </p>
         </div>
 
-        <!-- JD MATCH SCORE -->
-        <div class="card shadow-sm mb-4">
-            <div class="card-body">
-                <h5>JD Match Score</h5>
-                <div class="progress mb-2" style="height: 18px;">
-                    <div class="progress-bar {{ jd_class }}" role="progressbar">
-                        {{ jd_score|default:0 }}%
+        <!-- SCORE ROW -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <div class="dashboard-card card">
+                    <div class="card-body">
+                        <div class="score-box">
+                            <div class="score-number text-primary">{{ ats_score }}%</div>
+                            <div class="score-label">ATS Score</div>
+                            <div class="score-pill">System Compatibility Score</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="dashboard-card card">
+                    <div class="card-body">
+                        <div class="score-box">
+                            <div class="score-number text-success">{{ keyword_score }}%</div>
+                            <div class="score-label">Keyword Match</div>
+                            <div class="score-pill">Role Keyword Alignment</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="dashboard-card card">
+                    <div class="card-body">
+                        <div class="score-box">
+                            <div class="score-number text-warning">{{ jd_score }}%</div>
+                            <div class="score-label">JD Match</div>
+                            <div class="score-pill">Job Description Relevance</div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- KEYWORD MATCH -->
-        <div class="card shadow-sm mb-4">
-            <div class="card-body">
-                <h5>Keyword Match</h5>
-                <p class="fw-bold text-primary">{{ keyword_score|default:0 }}%</p>
+        <!-- BREAKDOWN + RISK -->
+        <div class="row g-4 mb-4">
+            <div class="col-lg-7">
+                <div class="dashboard-card card">
+                    <div class="card-body">
+                        <h3 class="section-title">ATS Score Breakdown</h3>
+
+                        {% if breakdown %}
+                        <div class="row g-3">
+                            {% for key, value in breakdown.items %}
+                            <div class="col-md-6">
+                                <div class="metric-box">
+                                    <h6>{{ key }}</h6>
+                                    <p>{{ value }}</p>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="empty-text">No score breakdown available.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="dashboard-card card">
+                    <div class="card-body">
+                        <h3 class="section-title">ATS Readability Risk</h3>
+
+                        {% if ats_template_risk.risk_level == "Low" %}
+                        <span class="risk-pill risk-low">Low Risk</span>
+                        {% elif ats_template_risk.risk_level == "Moderate" %}
+                        <span class="risk-pill risk-moderate">Moderate Risk</span>
+                        {% else %}
+                        <span class="risk-pill risk-high">High Risk</span>
+                        {% endif %}
+
+                        <div class="mt-3">
+                            <p class="mb-2"><strong>Readable:</strong>
+                                {% if ats_template_risk.readable %}Yes{% else %}No{% endif %}
+                            </p>
+                            <p class="mb-2"><strong>Word Count:</strong> {{ ats_template_risk.word_count }}</p>
+                            <p class="mb-3"><strong>Section Hits:</strong> {{ ats_template_risk.section_hits }}</p>
+
+                            {% if ats_template_risk.warnings %}
+                            <h6 class="fw-bold">Warnings</h6>
+                            <ul class="list-clean">
+                                {% for warning in ats_template_risk.warnings %}
+                                <li>{{ warning }}</li>
+                                {% endfor %}
+                            </ul>
+                            {% else %}
+                            <p class="text-success mb-0">No major ATS readability concerns detected.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- MATCHED KEYWORDS -->
-        <div class="card shadow-sm mb-4">
-            <div class="card-body">
-                <h5>Matched Keywords</h5>
-                <ul class="list-group">
-                    {% for word in matched_keywords %}
-                    <li class="list-group-item">{{ word }}</li>
-                    {% empty %}
-                    <li class="list-group-item text-muted">No matched keywords found</li>
-                    {% endfor %}
-                </ul>
+        <!-- MATCH + SKILLS -->
+        <div class="row g-4 mb-4">
+            <div class="col-lg-6">
+                <div class="dashboard-card card">
+                    <div class="card-body">
+                        <h3 class="section-title">Matched Keywords</h3>
+                        {% if matched_keywords %}
+                        {% for skill in matched_keywords %}
+                        <span class="badge-skill">{{ skill }}</span>
+                        {% endfor %}
+                        {% else %}
+                        <p class="empty-text">No matched keywords found.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="dashboard-card card">
+                    <div class="card-body">
+                        <h3 class="section-title">Missing Skills / Keywords</h3>
+                        {% if missing %}
+                        {% for skill in missing %}
+                        <span class="badge-missing">{{ skill }}</span>
+                        {% endfor %}
+                        {% else %}
+                        <p class="text-success mb-0">No major missing keywords detected.</p>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- MISSING SKILLS -->
-        <div class="card shadow-sm mb-4">
+        <!-- DETECTED SKILLS + GAP -->
+        <div class="row g-4 mb-4">
+            <div class="col-lg-6">
+                <div class="dashboard-card card">
+                    <div class="card-body">
+                        <h3 class="section-title">Detected Technical Skills</h3>
+                        {% if detected_skills %}
+                        {% for skill in detected_skills %}
+                        <span class="badge-skill">{{ skill }}</span>
+                        {% endfor %}
+                        {% else %}
+                        <p class="empty-text">No technical skills detected.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="dashboard-card card">
+                    <div class="card-body">
+                        <h3 class="section-title">Skill Gap Analysis</h3>
+                        {% if skill_gap %}
+                        <ul class="list-clean">
+                            {% for item in skill_gap %}
+                            <li>{{ item }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <p class="text-success mb-0">No significant skill gaps identified.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAGNOSIS -->
+        <div class="dashboard-card card mb-4">
             <div class="card-body">
-                <h5>Missing Skills</h5>
-                {% if missing_skills %}
-                {% for skill in missing_skills %}
-                <span class="badge bg-danger me-1">{{ skill }}</span>
-                {% endfor %}
-                {% else %}
-                <p class="text-success">No major skill gaps 🎉</p>
-                {% endif %}
+                <h3 class="section-title">Resume Diagnosis</h3>
+
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="mini-card">
+                            <h6 class="fw-bold">Overall Strength</h6>
+                            <p class="mb-0">{{ resume_diagnosis.overall_strength|default:"N/A" }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mini-card">
+                            <h6 class="fw-bold">ATS Readability</h6>
+                            <p class="mb-0">{{ resume_diagnosis.ats_readability|default:"N/A" }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mini-card">
+                            <h6 class="fw-bold">Verdict</h6>
+                            <p class="mb-0">{{ resume_diagnosis.verdict|default:"N/A" }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-4 mt-2">
+                    <div class="col-lg-6">
+                        <div class="mini-card">
+                            <h6 class="fw-bold">Strengths</h6>
+                            {% if resume_diagnosis.strengths %}
+                            <ul class="list-clean">
+                                {% for item in resume_diagnosis.strengths %}
+                                <li>{{ item }}</li>
+                                {% endfor %}
+                            </ul>
+                            {% else %}
+                            <p class="empty-text mb-0">No strengths detected.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6">
+                        <div class="mini-card">
+                            <h6 class="fw-bold">Weaknesses</h6>
+                            {% if resume_diagnosis.weaknesses %}
+                            <ul class="list-clean">
+                                {% for item in resume_diagnosis.weaknesses %}
+                                <li>{{ item }}</li>
+                                {% endfor %}
+                            </ul>
+                            {% else %}
+                            <p class="text-success mb-0">No major weaknesses detected.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
         <!-- SUGGESTIONS -->
-        {% if improved_lines %}
-        <div class="card mt-4 shadow-sm border-primary">
-            <div class="card-body">
-                <h5 class="text-primary">✨ Suggested Improvements</h5>
-
-                {% for original, improved in improved_lines %}
-                <div class="mb-3">
-                    <p class="text-muted mb-1">
-                        ❌ {{ original }}
-                    </p>
-                    <p class="fw-bold text-success">
-                        ✅ {{ improved }}
-                    </p>
+        <div class="row g-4 mb-4">
+            <div class="col-lg-6">
+                <div class="dashboard-card card">
+                    <div class="card-body">
+                        <h3 class="section-title">General Suggestions</h3>
+                        {% if suggestions %}
+                        <ul class="list-clean">
+                            {% for suggestion in suggestions %}
+                            <li>{{ suggestion }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <p class="empty-text">No general suggestions available.</p>
+                        {% endif %}
+                    </div>
                 </div>
-                {% endfor %}
+            </div>
 
+            <div class="col-lg-6">
+                <div class="dashboard-card card">
+                    <div class="card-body">
+                        <h3 class="section-title">AI Resume Suggestions</h3>
+                        {% if ai_suggestions %}
+                        <ul class="list-clean">
+                            {% for suggestion in ai_suggestions %}
+                            <li>{{ suggestion }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <p class="empty-text">No AI suggestions available.</p>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
         </div>
-        {% endif %}
+
+        <!-- IMPROVED LINES -->
+        <div class="dashboard-card card mb-4">
+            <div class="card-body">
+                <h3 class="section-title">Suggested Bullet Point Improvements</h3>
+
+                {% if improved_lines %}
+                <div class="table-responsive">
+                    <table class="table table-bordered align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Original</th>
+                                <th>Improved</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for original, improved in improved_lines %}
+                            <tr>
+                                <td>{{ original }}</td>
+                                <td><strong>{{ improved }}</strong></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="empty-text">No weak bullet points detected for rewriting.</p>
+                {% endif %}
+            </div>
+        </div>
 
         <!-- RESUME TEXT -->
-        <div class="card shadow-sm mb-4">
+        <div class="dashboard-card card mb-4">
             <div class="card-body">
-                <h5>Resume Extracted Text</h5>
-                <p class="text-muted">{{ resume.extracted_text|truncatewords:80 }}</p>
+                <h3 class="section-title">Extracted Resume Text</h3>
+                {% if resume_text %}
+                <div class="text-block">{{ resume_text }}</div>
+                {% else %}
+                <p class="empty-text">No extracted resume text available.</p>
+                {% endif %}
             </div>
         </div>
 
-        <!-- BUTTONS -->
-        <div class="text-center mb-5">
-            <a href="{% url 'matcher:history' %}" class="btn btn-secondary">Back to History</a>
-            <a href="{% url 'matcher:upload_resume' %}" class="btn btn-primary">Analyze Another Resume</a>
+        <!-- ACTIONS -->
+        <div class="text-center action-buttons mb-5">
+            <a href="{% url 'matcher:upload_resume' %}" class="btn btn-primary px-4 me-2">Analyze Another Resume</a>
+            <a href="{% url 'matcher:history' %}" class="btn btn-outline-secondary px-4">View History</a>
         </div>
 
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>
